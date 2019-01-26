@@ -6,13 +6,24 @@ const jwtKey =
 
 // quickly see what this file exports
 module.exports = {
-  authenticate,
+  authenticate, generateToken
 };
 
-// implementation details
+//generate token
+function generateToken(username, id){
+  const payload = {
+    username: username,
+    sub: `${id}`
+  }
+  const options = {
+    expiresIn: '1h'
+  }
+
+  return jwt.sign(payload, jwtKey, options);
+}
+
 function authenticate(req, res, next) {
   const token = req.get('Authorization');
-
   if (token) {
     jwt.verify(token, jwtKey, (err, decoded) => {
       if (err) return res.status(401).json(err);
