@@ -1,65 +1,85 @@
-const axios = require('axios');
-const db = require('../database/user');
-const bcrypt = require('bcryptjs');
-
-const { authenticate, generateToken } = require('../auth/authenticate');
-const { passwordProtection, checkFields, loginCheck } = require('../middleware/middleware');
+const axios = require("axios");
+const jwt = require("jsonwebtoken");
+const bcyrpt = require("bcryptjs");
+const db = require("../database/dbConfig");
+const { authenticate } = require("../auth/authenticate");
 
 module.exports = server => {
-  server.post('/api/register', checkFields, register);
-  server.post('/api/login', loginCheck, login);
-  server.get('/api/jokes', authenticate, getJokes);
+  server.post("/api/register", register);
+  server.post("/api/login", login);
+  server.get("/api/jokes", authenticate, getJokes);
 };
 
-function register(req, res) {
-  const user = req.body;
-  user.password = passwordProtection(user.password);
-  db.add(user)
-    .then(res => {
-      res.status(201).json({ message: 
-        "Account created successfully!"})
-    })
-    .catch(err => {
-      res.status(500).json({
-        message: "Unable to add account"
-      })
-    })
+const secret = secret.env.JWT_SECRET;
+
+function generateToken(user) {
+  const payload = {
+    username: user.username
+  };
+
+  const options = {
+    expiresIn: "1h",
+    jwtid: '13645'
+  };
+
+  return jwt.sign(payload, secret, options);
 }
 
+function register(req, res) {
+  // implement user registration
+  const credentials = req.body;
+  const hash = bcyrpt.hashSync(credentials.password, 14);
+  credentials.password = hash;
+
+  db("users")
+    .insert(credentials)
+    .then(ids => {
+      const id = ids[0];
+
+      db("users")
+        .where({ id })
+        .first()
+        .then(user => {
+          const token = generateToken(user);
+          res.status(201).json({ id: user.id, token });
+        });
+    })
+    .catch(err => {
+      res.status(500).json(err);
+    });
+};
+
 function login(req, res) {
-  const loginUser = req.body;
-  db.login(loginUser.username)
-    .then(response => {
-      if(bcrypt.compareSync(loginUser.password, response.password) === true ){
-        const token = generateToken(response.username, response.id);
-        res.status(200).json({
-          message: 'Login successful!',
-          token: token
-        })
+  // implement user login
+  const credentials = req.body;
+
+  db("users")
+    .where({ username: credentials.username })
+    .first()
+    .then(user => {
+      if (user && bcyrpt.compareSync(credentials.password, user.password)) {
+        const token = generateToken(user);
+        res.status(200).json({ message: "Logged in", token });
       } else {
-        res.status(404).json({
-          message: "Invalid username or password"
-        })
+        res.status(401).json({ message: "You shall not pass!" });
       }
     })
     .catch(err => {
-      res.status(500).json({
-        message: 'Unable to login.'
-      })
-    })
-}
+      res.status(500).json({ err });
+    });
+};
 
 function getJokes(req, res) {
   const requestOptions = {
-    headers: { accept: 'application/json' },
+    headers: { accept: "application/json" }
   };
 
   axios
-    .get('https://icanhazdadjoke.com/search', requestOptions)
+    .get("https://icanhazdadjoke.com/search", requestOptions)
     .then(response => {
       res.status(200).json(response.data.results);
     })
     .catch(err => {
-      res.status(500).json({ message: 'Error Fetching Jokes', error: err });
+      res.status(500).json({ message: "Error Fetching Jokes", error: err });
     });
 }
