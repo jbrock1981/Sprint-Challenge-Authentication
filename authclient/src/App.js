@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import './App.css';
+import {NavLink, Route} from 'react-router-dom';
+import Register from './components/register';
+import Login from './components/login';
 
 class App extends Component {
   state = {
@@ -32,7 +34,7 @@ class App extends Component {
       })
   }
 
-  jokelist = () => {
+  jokeList = () => {
     if(this.state.loading) {
       return(
         <div> {/* app container*/}
@@ -60,6 +62,13 @@ class App extends Component {
         <div> {/* app container*/}
           <h1>Dad Joke App</h1>
           <h2>you gotta log in first</h2>
+          <div>
+            <NavLink to='/register'>Register</NavLink>
+            <NavLink to='/login'>Login</NavLink>
+          </div>
+          <Route exact path='/' component={App} />
+          <Route path='/register' render={ props => <Register {...props} /> } />
+          <Route path='/login' render={ props => <Login {...props} /> } />
         </div>
       )
     }
@@ -68,7 +77,7 @@ class App extends Component {
 
   render() {
     return (
-      <div>{this.jokelist}</div> 
+      <div>{this.jokeList}</div> 
     );
   }
 }
