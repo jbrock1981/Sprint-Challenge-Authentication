@@ -15,7 +15,7 @@ function register(req, res) {
   const user = req.body;
   user.password = passwordProtection(user.password);
   db.add(user)
-    .then(response => {
+    .then(res => {
       res.status(201).json({ message: 
         "Account created successfully!"})
     })

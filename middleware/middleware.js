@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 
-passwordProtection = (password) => {
+passwordProtection = (req, res, password) => {
     if(password.length > 11){
         hashed = bcrypt.hashSync(password, 6);
         return hashed;
