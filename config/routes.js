@@ -10,7 +10,7 @@ module.exports = server => {
   server.get("/api/jokes", authenticate, getJokes);
 };
 
-const secret = secret.env.JWT_SECRET;
+const secret = process.env.JWT_SECRET || "oopsitdidntwork";
 
 function generateToken(user) {
   const payload = {
@@ -18,8 +18,8 @@ function generateToken(user) {
   };
 
   const options = {
-    expiresIn: "1h",
-    jwtid: '13645'
+    expiresIn: "42m",
+    jwtid: '8675309'
   };
 
   return jwt.sign(payload, secret, options);
